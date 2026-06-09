@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  wc2026:
+    build: .
+    container_name: wc2026-predictor
+    restart: always                    # ← Se reinicia SIEMPRE: crash, reboot, apagón
+    ports:
+      - "8026:8026"
+    volumes:
+      - ./data:/app/data               # ← Datos persisten fuera del container
+    environment:
+      - PORT=8026
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8026/api/scraper/status"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 120s              # 2 min para que entrene NegBin
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+        reservations:
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Tunnel para acceso público (opcional, si no tienes dominio)
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: wc2026-tunnel
+    restart: always
+    command: tunnel --no-autoupdate --url http://wc2026:8026
+    depends_on:
+      wc2026:
+        condition: service_healthy

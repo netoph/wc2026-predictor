@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+*.md
+backtest_wc2022.py
+blind_test_fast.py
+predict_wc2026.py
