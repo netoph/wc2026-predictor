@@ -167,20 +167,35 @@ eval_cache   = None
 
 STATE_DIR = ROOT / "data" / "state"
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        import numpy as np
+        if isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
+                            np.int16, np.int32, np.int64, np.uint8,
+                            np.uint16, np.uint32, np.uint64)):
+            return int(obj)
+        elif isinstance(obj, (np.float16, np.float32, np.float64)):
+            return float(obj)
+        elif isinstance(obj, (np.bool_,)):
+            return bool(obj)
+        elif isinstance(obj, (np.ndarray,)):
+            return obj.tolist()
+        return super().default(obj)
+
 def _save_state():
     """Guarda estado del bot, tracker y scanner a disco."""
     import json
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     try:
         with open(STATE_DIR / "bettor.json", "w") as f:
-            json.dump({"bets": bettor.bets, "bankroll": bettor.bankroll}, f)
+            json.dump({"bets": bettor.bets, "bankroll": bettor.bankroll}, f, cls=NumpyEncoder)
         with open(STATE_DIR / "tracker.json", "w") as f:
-            json.dump(hit_tracker.records, f)
+            json.dump(hit_tracker.records, f, cls=NumpyEncoder)
         if ev_scanner:
             with open(STATE_DIR / "scanner.json", "w") as f:
                 json.dump({"bet_log": ev_scanner.bet_log,
                            "scan_log": ev_scanner.scan_log[-100:],
-                           "scanned_matches": list(ev_scanner.scanned_matches)}, f)
+                           "scanned_matches": list(ev_scanner.scanned_matches)}, f, cls=NumpyEncoder)
     except Exception as e:
         print(f"  ⚠️  Error guardando estado: {e}")
 
