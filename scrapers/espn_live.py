@@ -68,11 +68,20 @@ def fetch_espn_scores() -> list:
         # Parse minute from clock
         minute = 0
         try:
-            clock_str = clock.replace("'", "").strip()
-            if clock_str:
-                minute = int(clock_str)
-        except:
-            minute = 0
+            import re
+            clock_str = clock.replace("'", "").strip().upper()
+            if "HT" in clock_str or "HALF" in clock_str:
+                minute = 45
+            elif clock_str:
+                if "+" in clock_str:
+                    minute = sum(int(x) for x in clock_str.split("+") if x.strip().isdigit())
+                else:
+                    digits = re.findall(r'\d+', clock_str)
+                    if digits:
+                        minute = int(digits[0])
+        except Exception as e:
+            minute = 45  # fallback safe during live
+            print(f"  ⚠️  Error parsing clock '{clock}': {e}")
 
         # Map state to our status
         if state == "in":
