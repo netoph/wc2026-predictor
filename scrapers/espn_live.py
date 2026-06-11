@@ -94,6 +94,8 @@ def fetch_espn_scores() -> list:
         # Extract odds (DraftKings via ESPN)
         odds_data = {}
         for odd in comp.get("odds", []):
+            if not odd:
+                continue
             ml = odd.get("moneyline", {})
             if ml:
                 home_ml = ml.get("home", {}).get("close", {}).get("odds")
