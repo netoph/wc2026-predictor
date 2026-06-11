@@ -228,6 +228,21 @@ def _restore_state():
             ev_scanner.scan_log = d.get("scan_log", [])
             ev_scanner.scanned_matches = set(d.get("scanned_matches", []))
             print(f"  ✓ Restaurado scanner: {len(ev_scanner.bet_log)} bets, {len(ev_scanner.scanned_matches)} matches escaneados")
+
+        # Sincronizar bet_log de scanner con las apuestas liquidadas en bettor
+        if ev_scanner and bettor.bets:
+            synced = 0
+            for b in bettor.bets:
+                if b["result"] is not None:
+                    for entry in ev_scanner.bet_log:
+                        if entry.get("bet_id") == b["id"] and entry.get("result") is None:
+                            entry["result"] = b["result"]
+                            entry["pnl"] = b["pnl"]
+                            synced += 1
+            if synced > 0:
+                print(f"  ✓ Sincronizados {synced} resultados de apuestas en scanner")
+                _save_state()
+
     except Exception as e:
         print(f"  ⚠️  Error restaurando estado: {e}")
 
