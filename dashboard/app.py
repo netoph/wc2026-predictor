@@ -101,7 +101,10 @@ async def espn_background_task():
             scraper_state["is_running"] = False
             # Persist state to disk after each cycle
             _save_state()
-            interval = 60 if live_count > 0 else 300  # 60s si hay partidos vivos
+            # During WC (Jun 11 - Jul 19), always scrape fast
+            from datetime import datetime
+            is_wc = datetime(2026,6,11) <= datetime.now() <= datetime(2026,7,20)
+            interval = 60 if (live_count > 0 or is_wc) else 300
             print(f"  📡 ESPN: {result.get('total_fetched',0)} partidos | "
                   f"{result.get('updated',0)} actualizados | "
                   f"{result.get('odds_logged',0)} odds | "
@@ -170,8 +173,7 @@ def _save_state():
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     try:
         with open(STATE_DIR / "bettor.json", "w") as f:
-            json.dump({"bets": bettor.bets, "bankroll": bettor.bankroll,
-                       "next_id": bettor.next_id}, f)
+            json.dump({"bets": bettor.bets, "bankroll": bettor.bankroll}, f)
         with open(STATE_DIR / "tracker.json", "w") as f:
             json.dump(hit_tracker.records, f)
         if ev_scanner:
@@ -195,7 +197,6 @@ def _restore_state():
                 d = json.load(f)
             bettor.bets = d.get("bets", [])
             bettor.bankroll = d.get("bankroll", 1000.0)
-            bettor.next_id = d.get("next_id", 1)
             print(f"  ✓ Restaurado bettor: {len(bettor.bets)} apuestas, bankroll=${bettor.bankroll:.2f}")
 
         tpath = STATE_DIR / "tracker.json"
@@ -313,7 +314,6 @@ def compute_prediction(home: str, away: str,
 
         final_h = np.array([[home_goals + i for j in range(max_g)] for i in range(max_g)])
         final_a = np.array([[away_goals + j for j in range(max_g)] for i in range(max_g)])
-        ph = float((final_h > final_a).astype(float) * joint).sum() if hasattr(final_h,"sum") else 0
         ph = float(np.sum((final_h > final_a) * joint))
         pd_ = float(np.sum((final_h == final_a) * joint))
         pa  = float(np.sum((final_h < final_a) * joint))

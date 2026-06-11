@@ -137,13 +137,16 @@ def update_fixtures_from_espn(matches: list) -> dict:
 
         if mask.any():
             idx = df[mask].index[0]
-            df.at[idx, "home_goals"] = m["home_goals"]
-            df.at[idx, "away_goals"] = m["away_goals"]
-            df.at[idx, "minute"]     = m["minute"]
-            df.at[idx, "status"]     = m["status"]
+            df.at[idx, "home_goals"] = float(m["home_goals"])
+            df.at[idx, "away_goals"] = float(m["away_goals"])
+            df.at[idx, "minute"]     = float(m["minute"])
+            df.at[idx, "status"]     = str(m["status"])
             updated += 1
 
     if updated > 0:
+        # Ensure consistent dtypes before saving
+        for col in ["home_goals", "away_goals", "minute"]:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
         df.to_csv(fixtures_path, index=False)
 
     return {"updated": updated, "total_fetched": len(matches)}
