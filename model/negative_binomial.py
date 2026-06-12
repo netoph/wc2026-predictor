@@ -261,8 +261,8 @@ class NegBinGoalModel:
         markets["btts"] = round(p_btts, 4)
 
         # Córners: correlación empírica con goles esperados
-        # λ_corners ≈ 5.2 + 3.1 * total_goals_expected (calibrado en WC 2018-2022)
-        lambda_corners = 5.2 + 3.1 * lambda_total
+        # λ_corners ≈ 5.0 + 1.5 * total_goals_expected (calibrado con la media de ~9.0 córners en mundiales)
+        lambda_corners = 5.0 + 1.5 * lambda_total
         for line in [8.5, 9.5, 10.5, 11.5]:
             p_c = 1 - sum(poisson.pmf(k, lambda_corners) for k in range(int(line)+1))
             markets[f"corners_over_{str(line).replace('.','p')}"] = round(p_c, 4)

@@ -364,7 +364,7 @@ def compute_prediction(home: str, away: str,
     p_over35 = 1 - sum(poisson.pmf(k, lambda_total) for k in range(4))
     p_btts   = (1 - poisson.pmf(0, lam_use)) * (1 - poisson.pmf(0, mu_use))
 
-    lam_corners = 5.2 + 3.1 * (lam_full + mu_full)  # siempre basado en partido completo
+    lam_corners = 5.0 + 1.5 * (lam_full + mu_full)  # siempre basado en partido completo
     p_corn85 = 1 - sum(poisson.pmf(k, lam_corners) for k in range(9))
     p_corn95 = 1 - sum(poisson.pmf(k, lam_corners) for k in range(10))
     p_corn105= 1 - sum(poisson.pmf(k, lam_corners) for k in range(11))
